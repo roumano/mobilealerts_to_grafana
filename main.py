@@ -9,6 +9,7 @@ from time import sleep
 import urllib.parse
 from influxdb import InfluxDBClient
 from dateutil import parser
+from random import uniform
 
 _url = 'https://measurements.mobile-alerts.eu'
 _phoneId = os.environ.get('PHONE_ID')
@@ -53,7 +54,7 @@ def getDetail(url,date = None):
     fromepoch2 = urllib.parse.quote_plus(str(fromepochtest.strftime("%d/%m/%Y+%H:%M"))).replace('%2B','+')
     toecpoch2 = urllib.parse.quote_plus(str(toecpochtest.strftime("%d/%m/%Y+%H:%M"))).replace('%2B','+')
     # '09%2F03%2F2019%3A%3A00%3A00'
-    sleep(1.1) # Time in seconds.
+    sleep (uniform(1, 3)) # Time in seconds. random between 1 & 3
     # from=09%2F03%2F2019+00%3A01&to=09%2F03%2F2019+23%3A59
     # print (urllib.parse.quote_plus(fromdate).replace('%2B','+'))
     # 09%2F03%2F2019+00%3A00
