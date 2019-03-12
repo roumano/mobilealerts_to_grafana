@@ -5,10 +5,12 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+from time import sleep
+from random import uniform
 
 _url = 'https://measurements.mobile-alerts.eu'
 _phoneId = os.environ.get('PHONE_ID')
-
+_headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0'}
 
 def getSensorName(sensor):
     if 'date' in sensor.text:
@@ -28,17 +30,20 @@ def getSummarySensor(sensor):
 
 def getSummary():
     r = requests.get(
-        '{}/Home/SensorsOverview?phoneid={}'.format(_url, _phoneId))
+        '{}/Home/SensorsOverview?phoneid={}'.format(_url, _phoneId), headers=_headers)
     return [getSummarySensor(sensor)
             for sensor in BeautifulSoup(r.text, 'html.parser').find_all('div', 'sensor')]
 
 
-def getDetail(url):
+def getDetail(url,date = None):
+    if date is None:
+        date = datetime.now() - timedelta(days=1)
     now = datetime.now()
-    fromepoch = (now - timedelta(days=1)).timestamp()
-    toecpoch = now.timestamp()
+    fromepoch = int(date.replace(hour=0,minute=1,second=0,microsecond=0).timestamp())
+    toecpoch = int(date.replace(hour=23,minute=59,second=59,microsecond=999999).timestamp())
+    sleep (uniform(1, 3)) # Time in seconds. random between 1 & 3
     r = requests.post('{}{}'.format(_url, url), data={
-                      'fromepoch': fromepoch, 'toepoch': toecpoch, 'pagesize': 200})
+                      'fromepoch': fromepoch, 'toepoch': toecpoch, 'pagesize': 250}, headers=_headers)
 
     soup = BeautifulSoup(r.text, 'html.parser').find(
         'form', {'id': 'MeasurementDetails'})
