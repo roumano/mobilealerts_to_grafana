@@ -51,16 +51,18 @@ def getDetail(sensor, date = None):
     header = [getSensorName(h) for h in soup.select(
         'table thead tr th:nth-child(1n+2)')]
 
+    data = []
     for line in soup.select('table tbody tr'):
         _date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
-        publishIntoDb([{
+        data.append( {
             "measurement": "mobilealerts",
             "fields": {header[i]: td.text.strip('%C ') for i, td in enumerate(line.select('td:nth-child(1n+2)'))},
             "tags": {
                 "location": sensor.a.text,
             },
             "time": _date2,
-        }])
+        } )
+    publishIntoDb(data)
 
 
 def publishIntoDb(data):
@@ -68,7 +70,7 @@ def publishIntoDb(data):
     # TODO: write here code to publish into influxDb
     client = InfluxDBClient(host='localhost', port=8086, username=_db_user , password=_db_passwd )
     client.switch_database(_db_name)
-    client.write_points(data, database='mobilealerts', time_precision='s')
+    client.write_points(data, database=_db_name, time_precision='s')
 
 
 
