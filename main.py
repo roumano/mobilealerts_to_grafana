@@ -3,6 +3,7 @@
 
 import os
 import requests
+import argparse
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from time import sleep
@@ -12,7 +13,7 @@ from dateutil import parser
 
 _url = 'https://measurements.mobile-alerts.eu'
 _phoneId = os.environ.get('PHONE_ID')
-_date = os.environ.get('DATE')
+
 _headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0'}
 _db_user = 'admin'
 _db_passwd = 'qUV4ingbQLJx!@845CBuo'
@@ -23,13 +24,17 @@ def getSensorName(sensor):
         return 'Date'
     return sensor.text
 
+
 def getSummary(date):
     r = requests.get(
         '{}/Home/SensorsOverview?phoneid={}'.format(_url, _phoneId), headers=_headers)
     return [getDetail(sensor,date)
             for sensor in BeautifulSoup(r.text, 'html.parser').find_all('div', 'sensor')]
 
-def getDetail(sensor, date = None):
+
+def getDetail(sensor, date):
+    date= datetime.strptime(date, '%Y-%m-%d')
+
     sleep (uniform(1, 3))
     post_data = {
         'fromepoch': int(date.replace(hour=0,minute=1,second=0,microsecond=0).timestamp()),
@@ -42,14 +47,14 @@ def getDetail(sensor, date = None):
         'form', {'id': 'MeasurementDetails'})
 
     header = [getSensorName(h) for h in soup.select(
-        'table thead tr th:nth-of-type(1n+2)')]
+        'table thead tr th:nth-child(1n+2)')]
 
     data = []
     for line in soup.select('table tbody tr'):
         _date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
         data.append( {
             "measurement": "mobilealerts",
-            "fields": {header[i]: td.text.strip('%C ') for i, td in enumerate(line.select('td:nth-of-type(1n+2)')) },
+            "fields": {header[i]: td.text.strip('%C ') for i, td in enumerate(line.select('td:nth-child(1n+2)'))},
             "tags": {
                 "location": sensor.a.text,
             },
@@ -59,14 +64,39 @@ def getDetail(sensor, date = None):
 
 def publishIntoDb(data):
     print(data)
-    # TODO: write here code to publish into influxDb
     client = InfluxDBClient(host='localhost', port=8086, username=_db_user , password=_db_passwd )
     client.switch_database(_db_name)
     client.write_points(data, database=_db_name, time_precision='s')
 
+def getDBLastInfo():
+    client = InfluxDBClient(host='localhost', port=8086, username=_db_user , password=_db_passwd )
+    client.switch_database(_db_name)
+    db = client.query('SELECT "Température" FROM "mobilealerts"  ORDER by time DESC LIMIT 1')
+    for item in db.get_points():
+        dateinfluxdb = item['time']
+    return dateinfluxdb
+
+def daterange(start_date, end_date):
+    for n in range(int ((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
 if __name__ == "__main__":
-    if _date is None:
-        date = datetime.now() - timedelta(days=1)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', help='date in format YYYY-MM-DD')
+    args = parser.parse_args()
+
+    if args.date is None:
+        # Connect to influxdb, get the lastest entry & add 1 days
+        start_date = datetime.strptime(getDBLastInfo(), '%Y-%m-%dT%H:%M:%SZ').date() + timedelta(days=1)
+        end_date = datetime.now().date()
+        #end_date = datetime.now().date() - timedelta(days=1)
+        for single_date in daterange(start_date, end_date):
+            print("parsing date ", single_date.strftime("%Y-%m-%d"))
+            # print("date est au format ", type(single_date.strftime("%Y-%m-%d")))
+            getSummary(single_date.strftime("%Y-%m-%d"))
     else:
-        date = parser.parse(_date)
-    getSummary(date)
+        date = datetime.strptime(args.date, '%Y-%m-%d').date()
+        print("parsing date ", date.strftime("%Y-%m-%d"))
+        # print("date est au format ", type(date.strftime("%Y-%m-%d")))
+        getSummary(date.strftime("%Y-%m-%d"))
