@@ -34,6 +34,7 @@ def getSummary(date):
 
 def getDetail(sensor, date):
     date= datetime.strptime(date, '%Y-%m-%d')
+
     sleep (uniform(1, 3))
     post_data = {
         'fromepoch': int(date.replace(hour=0,minute=1,second=0,microsecond=0).timestamp()),
@@ -99,4 +100,3 @@ if __name__ == "__main__":
         print("parsing date ", date.strftime("%Y-%m-%d"))
         # print("date est au format ", type(date.strftime("%Y-%m-%d")))
         getSummary(date.strftime("%Y-%m-%d"))
-
