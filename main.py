@@ -42,14 +42,14 @@ def getDetail(sensor, date = None):
         'form', {'id': 'MeasurementDetails'})
 
     header = [getSensorName(h) for h in soup.select(
-        'table thead tr th:nth-child(1n+2)')]
+        'table thead tr th:nth-of-type(1n+2)')]
 
     data = []
     for line in soup.select('table tbody tr'):
         _date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
         data.append( {
             "measurement": "mobilealerts",
-            "fields": {header[i]: td.text.strip('%C ') for i, td in enumerate(line.select('td:nth-child(1n+2)'))},
+            "fields": {header[i]: td.text.strip('%C ') for i, td in enumerate(line.select('td:nth-of-type(1n+2)')) },
             "tags": {
                 "location": sensor.a.text,
             },
