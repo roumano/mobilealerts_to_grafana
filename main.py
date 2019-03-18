@@ -3,6 +3,7 @@
 
 import os
 import requests
+import argparse
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from time import sleep
@@ -12,8 +13,6 @@ from dateutil import parser
 
 _url = 'https://measurements.mobile-alerts.eu'
 _phoneId = os.environ.get('PHONE_ID')
-_date = os.environ.get('DATE')
-
 
 _headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0'}
 _db_user = 'admin'
@@ -33,7 +32,8 @@ def getSummary(date):
             for sensor in BeautifulSoup(r.text, 'html.parser').find_all('div', 'sensor')]
 
 
-def getDetail(sensor, date = None):
+def getDetail(sensor, date):
+    date= datetime.strptime(date, '%Y-%m-%d')
     sleep (uniform(1, 3))
     post_data = {
         'fromepoch': int(date.replace(hour=0,minute=1,second=0,microsecond=0).timestamp()),
@@ -74,12 +74,29 @@ def getDBLastInfo():
     for item in db.get_points():
         dateinfluxdb = item['time']
     return dateinfluxdb
+
+def daterange(start_date, end_date):
+    for n in range(int ((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
 if __name__ == "__main__":
-    if _date is None:
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--date', help='date in format YYYY-MM-DD')
+    args = parser.parse_args()
+
+    if args.date is None:
         # Connect to influxdb, get the lastest entry & add 1 days
-        date = datetime.strptime(getDBLastInfo(), '%Y-%m-%dT%H:%M:%SZ') + timedelta(days=1)
+        start_date = datetime.strptime(getDBLastInfo(), '%Y-%m-%dT%H:%M:%SZ').date() + timedelta(days=1)
+        end_date = datetime.now().date()
+        #end_date = datetime.now().date() - timedelta(days=1)
+        for single_date in daterange(start_date, end_date):
+            print("parsing date ", single_date.strftime("%Y-%m-%d"))
+            # print("date est au format ", type(single_date.strftime("%Y-%m-%d")))
+            getSummary(single_date.strftime("%Y-%m-%d"))
     else:
-        date = parser.parse(_date)
-    print (date)
-    #exit ()
-    getSummary(date)
+        date = datetime.strptime(args.date, '%Y-%m-%d').date()
+        print("parsing date ", date.strftime("%Y-%m-%d"))
+        # print("date est au format ", type(date.strftime("%Y-%m-%d")))
+        getSummary(date.strftime("%Y-%m-%d"))
+
