@@ -6,8 +6,12 @@ This small python programs parse your data in order to put them into a influxdb 
 It's also save the data into a json file per day
 
 ## Example
-
+* Specific Graph  
 ![Grafana Example](grafana_example.png)
+* All temperature in one graph  
+![Grafana All Temperature](grafana_all.png)
+* a graph per location  
+![Grafana Location](grafana_one_graph_per_location.png)
 
 # Configuration
 you have to set few parametres into a `.params` file, like on this exemple:
@@ -46,6 +50,11 @@ you have to set few parametres into a `.params` file, like on this exemple:
 
 * The **resille* part is only need if you have a **Delta 55** or **Delta 50** to heat your house and want to simulte the power utilization.
 * The **hc** part is only need if you have a **Heure Creuse/Heure Pleine** power supply and a **Delta
+
+## Grafana
+* Tips : in grafana dashboard, we can use relative time like this :
+  * begin: `now-20d/d`
+  * end: `now-1d/d`
 
 # Command line
 * From last date in influxdb to yesterday :  
