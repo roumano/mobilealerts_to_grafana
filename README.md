@@ -5,6 +5,10 @@ But GUI are not very good and can't see graphs or trends and datadata are remove
 This small python programs parse your data in order to put them into a influxdb server.
 It's also save the data into a json file per day
 
+## Example
+
+![Grafana Example](grafana_example.png)
+
 # Configuration
 you have to set few parametres into a `.params` file, like on this exemple:
 ```
