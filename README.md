@@ -48,8 +48,8 @@ you have to set few parametres into a `.params` file, like on this exemple:
 * The **hc** part is only need if you have a **Heure Creuse/Heure Pleine** power supply and a **Delta
 
 # Command line
-* From last date in influxdb to yesterday :
+* From last date in influxdb to yesterday :  
 `python3 main.py`
-* For a specific day
-it's mandatory to use the programs like this the first run !
+* For a specific day  
+it's mandatory to use the programs like this the first run !  
 `python3 main.py --date 2019-03-17 `
