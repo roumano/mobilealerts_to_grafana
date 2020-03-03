@@ -47,7 +47,7 @@ you have to set few parametres into a `.params` file, like on this exemple:
 * The **resille* part is only need if you have a **Delta 55** or **Delta 50** to heat your house and want to simulte the power utilization.
 * The **hc** part is only need if you have a **Heure Creuse/Heure Pleine** power supply and a **Delta
 
-# Command line
+# Command line
 * From last date in influxdb to yesterday :
 `python3 main.py`
 * For a specific day
