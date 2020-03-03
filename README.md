@@ -12,6 +12,7 @@ It's also save the data into a json file per day
 ![Grafana All Temperature](grafana_all.png)
 * a graph per location  
 ![Grafana Location](grafana_one_graph_per_location.png)
+![Grafana Location](grafana_one_graph_per_location2.png)
 
 # Configuration
 you have to set few parametres into a `.params` file, like on this exemple:
