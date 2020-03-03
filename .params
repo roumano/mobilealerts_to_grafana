@@ -1,0 +1,17 @@
+{
+    "mobile-alerts":
+    {
+        "url":     "https://measurements.mobile-alerts.eu",
+        "phoneId": "1234567890"
+    },
+    "influx":
+    {
+        "host":			"localhost",
+        "port":			8086,
+        "db":			"mobilealerts",
+        "username":		"admin",
+        "password":		"XXXX",
+        "ssl":			false,
+        "verify_ssl":	false
+    }
+}

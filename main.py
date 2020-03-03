@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import os
+import sys
 import requests
 import argparse
 import json
@@ -14,13 +15,40 @@ from influxdb import InfluxDBClient
 from dateutil import parser
 from pathlib import Path
 
-_url = 'https://measurements.mobile-alerts.eu'
-_phoneId = os.environ.get('PHONE_ID')
+_headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:73.0) Gecko/20100101 Firefox/73.0'}
 
-_headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0'}
-_db_user = 'admin'
-_db_passwd = 'qUV4ingbQLJx!@845CBuo'
-_db_name = 'mobilealerts'
+PFILE = "/.params"
+
+# Sub to return format wanted by linky.py
+def _dayToStr(date):
+    return date.strftime("%d/%m/%Y")
+
+# Open file with params for influxdb, enedis API and HC/HP time window
+def _openParams(pfile):
+    # Try to load .params then programs_dir/.params
+    if os.path.isfile(os.getcwd() + pfile):
+        p = os.getcwd() + pfile
+    elif os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + pfile):
+        p = os.path.dirname(os.path.realpath(__file__)) + pfile
+    else:
+        if (os.getcwd() + pfile != os.path.dirname(os.path.realpath(__file__)) + pfile):
+            logging.error('file %s or %s not exist', os.path.realpath(os.getcwd() + pfile) , os.path.dirname(os.path.realpath(__file__)) + pfile)
+        else:
+            logging.error('file %s not exist', os.getcwd() + pfile )
+        sys.exit(1)
+    try:
+        f = open(p, 'r')
+        try:
+            array = json.load(f)
+        except ValueError as e:
+            logging.error('decoding JSON has failed', e)
+            sys.exit(1)
+    except IOError:
+        logging.error('cannot open %s', p)
+        sys.exit(1)
+    else:
+        f.close()
+        return array
 
 def getSensorName(sensor):
     if 'date' in sensor.text:
@@ -30,18 +58,15 @@ def getSensorName(sensor):
 
 def getSummary(date):
     r = requests.get(
-        '{}/Home/SensorsOverview?phoneid={}'.format(_url, _phoneId), headers=_headers)
+        '{}/Home/SensorsOverview?phoneid={}'.format(params['mobile-alerts']['url'], params['mobile-alerts']['phoneId']), headers=_headers)
     data = []
     for sensor in BeautifulSoup(r.text, 'html.parser').find_all('div', 'sensor'):
-        getDetail2(sensor,date,data)
+        getDetail(sensor,date,data)
 
     publishIntoDb(data)
     WriteToFile(date,data)
 
-    #return [getDetail(sensor,date)
-    #        for sensor in BeautifulSoup(r.text, 'html.parser').find_all('div', 'sensor')]
-
-def getDetail2(sensor, date, data):
+def getDetail(sensor, date, data):
     local = pytz.timezone ("Europe/Paris")
     default = 0.0
 
@@ -52,79 +77,79 @@ def getDetail2(sensor, date, data):
         'toepoch': int(datetime.combine(date, datetime.max.time()).timestamp()),
         'pagesize': 250
     }
-    r = requests.post('{}{}'.format(_url, sensor.a['href']), data=post_data, headers=_headers)
+    r = requests.post('{}{}'.format(params['mobile-alerts']['url'], sensor.a['href']), data=post_data, headers=_headers)
 
     soup = BeautifulSoup(r.text, 'html.parser').find(
         'form', {'id': 'MeasurementDetails'})
 
     header = [getSensorName(h) for h in soup.select(
-        'table thead tr th:nth-child(1n+2)')]
+        'table thead tr th:nth-of-type(1n+2)')]
 
-    for line in soup.select('table tbody tr'):
-        #_date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
-        _date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S')
-        _date3 = local.localize(_date2, is_dst=None).astimezone(pytz.utc).strftime ('%Y-%m-%dT%H:%M:%SZ')
-        #print (line.select('td:nth-child(1n+2)'))
-        # .replace(tzinfo=timezone.utc).astimezone(tz=None).timestamp()
-        data.append( {
-            "measurement": "mobilealerts",
-            "fields": {header[i]: float(td.text.strip('%C -')) if header[i] != 'Date' and td.text != '---' else ( default if td.text == '---' else int(datetime.strptime(td.text, '%d/%m/%Y %H:%M:%S').replace(tzinfo=timezone.utc).astimezone(tz=None).timestamp())) for i, td in enumerate(line.select('td:nth-child(1n+2)'))},
-            "tags": {
-                "location": sensor.a.text,
-            },
-            "time": _date3,
-        } )
+    #print(header)
+    # ['Température', 'Hygrométrie']
+    for i, type in enumerate(header):
+        #print(type)
+        if type == 'Capteur de température':
+            fields = 'Température'
+            location = 'piscine'
+        else:
+            location = sensor.a.text
+            fields = type
 
+        for line in soup.select('table tbody tr'):
+            value = line.select('td')[i+1].text.strip('% C')
+            if value == '---':
+                continue
+            else:
+                _date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S')
+                # is_dst=None is not working anymore, use True or False instead ? 
+                # http://pytz.sourceforge.net/
+                #_date3 = local.localize(_date2, is_dst=None).astimezone(pytz.utc).strftime ('%Y-%m-%dT%H:%M:%SZ')
+                _date3 = local.localize(_date2, is_dst=False).astimezone(pytz.utc).strftime ('%Y-%m-%dT%H:%M:%SZ')
+                # Bad data ? :
+                try:
+                    value = float(value.replace(',','.'))
+                except ValueError:
+                    print ('Error with', line , ',unable to convert' , value , 'as float for the type:', type)
+                    continue
 
-def getDetail(sensor, date):
-    local = pytz.timezone ("Europe/Paris")
-    default = 0.0
+                if 'resille' in params and location == 'dehors' and fields == 'Température':
+                    # Add into DB : ecart & consigne from .params
 
-    sleep (uniform(5, 9))
-        #'toepoch': int(date.replace(hour=23,minute=59,second=59,microsecond=999999).timestamp()),
-    post_data = {
-        'fromepoch': int(datetime.combine(date, datetime.min.time()).timestamp()),
-        'toepoch': int(datetime.combine(date, datetime.max.time()).timestamp()),
-        'pagesize': 250
-    }
-    r = requests.post('{}{}'.format(_url, sensor.a['href']), data=post_data, headers=_headers)
-
-    soup = BeautifulSoup(r.text, 'html.parser').find(
-        'form', {'id': 'MeasurementDetails'})
-
-    header = [getSensorName(h) for h in soup.select(
-        'table thead tr th:nth-child(1n+2)')]
-
-    data = []
-    for line in soup.select('table tbody tr'):
-        #_date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
-        _date2 = datetime.strptime(line.select('td')[0].text, '%d/%m/%Y %H:%M:%S')
-        _date3 = local.localize(_date2, is_dst=None).astimezone(pytz.utc).strftime ('%Y-%m-%dT%H:%M:%SZ')
-        #print (line.select('td:nth-child(1n+2)'))
-        # .replace(tzinfo=timezone.utc).astimezone(tz=None).timestamp()
-        data.append( {
-            "measurement": "mobilealerts",
-            "fields": {header[i]: float(td.text.strip('%C -')) if header[i] != 'Date' and td.text != '---' else ( default if td.text == '---' else int(datetime.strptime(td.text, '%d/%m/%Y %H:%M:%S').replace(tzinfo=timezone.utc).astimezone(tz=None).timestamp())) for i, td in enumerate(line.select('td:nth-child(1n+2)'))},
-            "tags": {
-                "location": sensor.a.text,
-            },
-            "time": _date3,
-        } )
-    publishIntoDb(data)
-    WriteToFile(date,data)
+                    data.append( {
+                        "measurement": "mobilealerts",
+                        "fields": {
+                          fields: float(value),
+                          "consigne": int(params['resille']['consigne']),
+                          "ecart": int(params['resille']['ecart']),
+                        },
+                        "tags": { "location": location, },
+                        "time": _date3,
+                        } )
+                else:
+                    data.append( {
+                        "measurement": "mobilealerts",
+                        "fields": {fields: float(value)},
+                        "tags": { "location": location, },
+                        "time": _date3,
+                        } )
 
 def publishIntoDb(data):
-    #print(data)
-    client = InfluxDBClient(host='localhost', port=8086, username=_db_user , password=_db_passwd )
-    client.switch_database(_db_name)
-    client.write_points(data, database=_db_name, time_precision='s')
+    client = InfluxDBClient(host=params['influx']['host'], port=params['influx']['port'], username=params['influx']['username'] , password=params['influx']['password'] )
+    client.switch_database(params['influx']['db'])
+    client.write_points(data, database=params['influx']['db'], time_precision='s')
 
 def getDBLastInfo():
-    client = InfluxDBClient(host='localhost', port=8086, username=_db_user , password=_db_passwd )
-    client.switch_database(_db_name)
-    db = client.query('SELECT "Température" FROM "mobilealerts"  ORDER by time DESC LIMIT 1')
+    dateinfluxdb = None
+    client = InfluxDBClient(host=params['influx']['host'], port=params['influx']['port'], username=params['influx']['username'] , password=params['influx']['password'] )
+    client.switch_database(params['influx']['db'])
+    db = client.query('SELECT "Température" FROM "mobilealerts" ORDER by time DESC LIMIT 1')
     for item in db.get_points():
         dateinfluxdb = item['time']
+    if dateinfluxdb is None:
+        print('Unable to get data in influxdb, the database is empty?')
+        print('use the --date argument ')
+        sys.exit(1)
     return dateinfluxdb
 
 def daterange(start_date, end_date):
@@ -138,14 +163,14 @@ def PushHeureCreuse(date):
     end = datetime.combine(date, datetime.max.time())
     # UTC time so - 2 hours ...
     #heureCreuseDebut = begin.replace(hour=1,minute=40)
-    heureCreuseDebut = begin.replace(hour=23,minute=40,day=begin.day -1)
+    heureCreuseDebut = begin.replace(hour=23,minute=40) - timedelta(days=1)
     heureCreuseFin = begin.replace(hour=6,minute=10)
     heureCreuse2Debut = begin.replace(hour=10,minute=10)
     heureCreuse2Fin = begin.replace(hour=11,minute=40)
     #print("heureCreuseDebut " , heureCreuseDebut)
     #print("heureCreuseFin " , heureCreuseFin)
-    client = InfluxDBClient(host='localhost', port=8086, username=_db_user , password=_db_passwd )
-    client.switch_database(_db_name)
+    client = InfluxDBClient(host=params['influx']['host'], port=params['influx']['port'], username=params['influx']['username'] , password=params['influx']['password'] )
+    client.switch_database(params['influx']['db'])
     query = "SELECT \"Température\" FROM \"mobilealerts\" WHERE location ='dehors' AND time > '" + begin.strftime("%Y-%m-%d %H:%M:%S") + "' AND time < '" + end.strftime("%Y-%m-%d %H:%M:%S") + "' ORDER by time"
     #db = client.query('SELECT "Température" FROM "mobilealerts" WHERE location =\'dehors\' AND time > \'2019-04-02 00:00:00.000\' AND time < \'2019-04-02 23:59:59.999\' ORDER by time')
     db = client.query(query)
@@ -171,7 +196,7 @@ def PushHeureCreuse(date):
 def WriteToFile(date, data):
     # Only if date is not today (today the file will not be complete ...)
     if (date < datetime.now().date()):
-        with open(str(Path.home()) + "/Dropbox/Mobile-alerts/data/" + date.strftime("%Y-%m-%d") + ".txt", mode='w') as f:
+        with open(str(os.getcwd()) + "/data/" + date.strftime("%Y-%m-%d") + ".txt", mode='w') as f:
             #json.dump(data,f)
             # Better output
             f.write(json.dumps(data, indent=1))
@@ -183,6 +208,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', help='date in format YYYY-MM-DD')
     args = parser.parse_args()
+    params = _openParams(PFILE)
+    # params['influx']['username']
+    # logging.info("logged in InfluxDB Server Host %s succesfully", params['influx']['host'])
+    #
 
     if args.date is None:
         # Connect to influxdb, get the lastest entry & add 1 days
@@ -191,7 +220,7 @@ if __name__ == "__main__":
         #end_date = datetime.now().date() - timedelta(days=1)
         for single_date in daterange(start_date, end_date):
             try:
-                with open(str(Path.home()) + "/Dropbox/Mobile-alerts/data/" + single_date.strftime("%Y-%m-%d") + ".txt") as f:
+                with open(str(os.getcwd()) + "/data/" + single_date.strftime("%Y-%m-%d") + ".txt") as f:
                     data = json.load(f)
                     f.close()
                     print ("Reading data from Mobile-alerts/data/" + single_date.strftime("%Y-%m-%d") + ".txt")
@@ -209,7 +238,7 @@ if __name__ == "__main__":
         print("Fetch Data for date ", date.strftime("%Y-%m-%d"))
         # Read the file as source
         try:
-            with open(str(Path.home()) + "/Dropbox/Mobile-alerts/data/" + date.strftime("%Y-%m-%d") + ".txt") as f:
+            with open(str(os.getcwd()) + "/data/" + date.strftime("%Y-%m-%d") + ".txt") as f:
                 data = json.load(f)
             f.close()
             print ("Reading data from Mobile-alerts/data/" + date.strftime("%Y-%m-%d") + ".txt")

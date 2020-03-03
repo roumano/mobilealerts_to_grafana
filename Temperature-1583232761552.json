@@ -1,4 +1,40 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_INFLUXDB",
+      "label": "InfluxDB",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "6.0.1"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": "5.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "singlestat",
+      "name": "Singlestat",
+      "version": "5.0.0"
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -12,7 +48,7 @@
       },
       {
         "datasource": "-- Grafana --",
-        "enable": true,
+        "enable": false,
         "hide": false,
         "iconColor": "rgba(255, 96, 96, 1)",
         "limit": 100,
@@ -26,10 +62,169 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 1,
-  "iteration": 1555908054602,
+  "id": null,
+  "iteration": 1583167296309,
   "links": [],
   "panels": [
+    {
+      "aliasColors": {
+        "Hygrométrie": "#64b0c8",
+        "Température": "#629e51"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "decimals": 1,
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 14,
+        "x": 0,
+        "y": 0
+      },
+      "id": 6,
+      "interval": "21m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": true,
+        "rightSide": false,
+        "show": true,
+        "sideWidth": 300,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 8,
+      "nullPointMode": "null",
+      "paceLength": 10,
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "v",
+      "seriesOverrides": [
+        {
+          "alias": "Piscine",
+          "color": "#8AB8FF",
+          "fill": 3,
+          "linewidth": 3
+        },
+        {
+          "alias": "Dehors",
+          "color": "#C4162A",
+          "fill": 1,
+          "linewidth": 1
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Piscine",
+          "groupBy": [],
+          "measurement": "mobilealerts",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Température\") FROM \"mobilealerts\" WHERE (\"location\" =~ /^piscine$/) AND $timeFilter GROUP BY time(29m) fill(linear)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Température"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "location",
+              "operator": "=~",
+              "value": "/^$Location$/"
+            }
+          ]
+        },
+        {
+          "alias": "Dehors",
+          "groupBy": [],
+          "measurement": "mobilealerts",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Température\") FROM \"mobilealerts\" WHERE (\"location\" =~ /^dehors$/) AND $timeFilter  GROUP BY time(29m) fill(linear)",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Hygrométrie"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "location",
+              "operator": "=~",
+              "value": "/^$Location$/"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Piscine",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "celsius",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "humidity",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
     {
       "cacheTimeout": null,
       "colorBackground": false,
@@ -41,7 +236,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#58140c"
       ],
-      "datasource": "InfluxDB",
+      "datasource": "${DS_INFLUXDB}",
       "decimals": 1,
       "description": "Calcul du % d'utilisation du chauffage via sonde externe consigne, ecart, en heure creuse :\n\n( $Consigne - Température  ) / $Ecart * 100",
       "format": "percent",
@@ -53,9 +248,9 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 4,
-        "x": 0,
+        "x": 14,
         "y": 0
       },
       "id": 16,
@@ -112,7 +307,7 @@
           "measurement": "mobilealerts",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT ($Consigne - \"Température\" )/$Ecart * 100 FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND \"Température\" < $Consigne  AND heureCreuse = 1 AND $timeFilter  fill(null)",
+          "query": "SELECT (consigne - \"Température\" )/ecart * 100 FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND \"Température\" < \"consigne\"  AND heureCreuse = 1 AND $timeFilter  fill(null)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -158,127 +353,11 @@
       "colorPrefix": true,
       "colorValue": false,
       "colors": [
-        "#58140c",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": "InfluxDB",
-      "decimals": 1,
-      "description": "Calcul du coùu du chauffage via sonde externe :\n$Consigne - Température / $Ecart * 2.5Kw * .1272€/1Wh * Nb D'Heure Creuse\nNb D'Heure Creuse = NbHeureCreuse / 8,571428571 (1H==60mm /7m separe les points )",
-      "format": "none",
-      "gauge": {
-        "maxValue": 2,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 4,
-        "y": 0
-      },
-      "id": 14,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "€",
-      "postfixFontSize": "200%",
-      "prefix": "",
-      "prefixFontSize": "200%",
-      "rangeMaps": [
-        {
-          "from": "",
-          "text": "",
-          "to": ""
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": true,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT ($Consigne - \"Température\" )/$Ecart * 2.5 * .1272 * $NbHeureCreuse / 8.571428571 FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND \"Température\" < $Consigne AND $timeFilter AND heureCreuse = 1 GROUP BY heureCreuse fill(previous)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": "",
-      "title": "Coût Chauffage",
-      "transparent": true,
-      "type": "singlestat",
-      "valueFontSize": "200%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorPrefix": true,
-      "colorValue": false,
-      "colors": [
         "#299c46",
         "rgba(237, 129, 40, 0.89)",
         "#58140c"
       ],
-      "datasource": "InfluxDB",
+      "datasource": "${DS_INFLUXDB}",
       "decimals": 1,
       "description": "Puissance utiliser par le chauffage via sonde externe :\n$Consigne - Température / $Ecart par Heure\nNb D'Heure Creuse = NbHeureCreuse / 8,571428571 (1H==60mm /7m separe les points )",
       "format": "kwatth",
@@ -290,9 +369,9 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
-        "x": 8,
+        "x": 18,
         "y": 0
       },
       "id": 17,
@@ -349,7 +428,7 @@
           "measurement": "mobilealerts",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT ($Consigne - \"Température\" )/$Ecart * 2.5 * $NbHeureCreuse / 8.571428571 FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND \"Température\" < $Consigne AND $timeFilter AND heureCreuse = 1 GROUP BY heureCreuse fill(previous)",
+          "query": "SELECT (consigne - \"Température\" )/ecart * 2.5 * $NbHeureCreuse / 8.571428571 FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND \"Température\" < consigne AND $timeFilter AND heureCreuse = 1 GROUP BY heureCreuse fill(previous)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -385,58 +464,69 @@
       "valueName": "avg"
     },
     {
-      "aliasColors": {
-        "Chauffage": "#cca300",
-        "Hygrométrie": "#64b0c8",
-        "Max": "#bf1b00",
-        "Min": "#9ac48a",
-        "Température": "#e5ac0e"
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorPrefix": true,
+      "colorValue": false,
+      "colors": [
+        "#58140c",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "${DS_INFLUXDB}",
+      "decimals": 1,
+      "description": "Calcul du coùu du chauffage via sonde externe :\n$Consigne - Température / $Ecart * 2.5Kw * .1272€/1Wh * Nb D'Heure Creuse\nNb D'Heure Creuse = NbHeureCreuse / 8,571428571 (1H==60mm /7m separe les points )",
+      "format": "none",
+      "gauge": {
+        "maxValue": 2,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
       },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "decimals": 0,
-      "fill": 0,
       "gridPos": {
-        "h": 12,
-        "w": 24,
-        "x": 0,
-        "y": 6
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
       },
-      "id": 11,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": false,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 300,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
+      "id": 14,
+      "interval": null,
       "links": [],
-      "nullPointMode": "null as zero",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
+      "mappingType": 1,
+      "mappingTypes": [
         {
-          "alias": "Hygrométrie",
-          "yaxis": 2
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
         }
       ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "€",
+      "postfixFontSize": "200%",
+      "prefix": "",
+      "prefixFontSize": "200%",
+      "rangeMaps": [
+        {
+          "from": "",
+          "text": "",
+          "to": ""
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": true,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
       "targets": [
         {
-          "alias": "Chauffage",
           "groupBy": [
             {
               "params": [
@@ -454,74 +544,9 @@
           "measurement": "mobilealerts",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT ($Consigne - mean(\"Température\") )/ $Ecart * 100 FROM \"mobilealerts\" WHERE ( \"location\" = 'dehors' ) AND \"Température\" < $Consigne AND heureCreuse = 1 AND $timeFilter GROUP BY time(20m) fill(null)\n\n",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Température"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "dehors"
-            }
-          ]
-        },
-        {
-          "alias": "",
-          "groupBy": [],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT (14 - mean(\"Température\") )/ 8 * 100 FROM \"mobilealerts\" WHERE ( \"location\" = 'dehors' ) AND \"Température\" < $Consigne AND heureCreuse = 1 AND $timeFilter GROUP BY time(20m) fill(null)\n",
+          "query": "SELECT (consigne - \"Température\" )/ecart * 2.5 * 0.1272 * $NbHeureCreuse / 8.571428571 FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND \"Température\" < consigne AND $timeFilter AND heureCreuse = 1 GROUP BY heureCreuse fill(previous)",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Min",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT (10 - mean(\"Température\") )/ 14 * 100 FROM \"mobilealerts\" WHERE ( \"location\" = 'dehors' ) AND \"Température\" < $Consigne AND heureCreuse = 1 AND $timeFilter GROUP BY time(20m) fill(null)\n",
-          "rawQuery": true,
-          "refId": "C",
           "resultFormat": "time_series",
           "select": [
             [
@@ -540,510 +565,47 @@
           "tags": []
         }
       ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "% Utilisation du Chauffage",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
+      "thresholds": "",
+      "title": "Coût Chauffage",
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
+      "type": "singlestat",
+      "valueFontSize": "200%",
+      "valueMaps": [
         {
-          "format": "percent",
-          "label": null,
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "humidity",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "decimals": 1,
-      "fill": 0,
-      "gridPos": {
-        "h": 13,
-        "w": 24,
-        "x": 0,
-        "y": 18
-      },
-      "id": 2,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": false,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 300,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "Dehors",
-          "yaxis": 1
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "Chambre",
-          "groupBy": [],
-          "hide": false,
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Température"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "chambre"
-            }
-          ]
-        },
-        {
-          "alias": "Cuisine",
-          "groupBy": [],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Température\") FROM \"mobilealerts\" WHERE (\"location\" = 'cuisine') AND $timeFilter  GROUP BY time(29m) fill(linear)",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Température"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "cuisine"
-            }
-          ]
-        },
-        {
-          "alias": "Antonin",
-          "groupBy": [],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Température"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "Antonin"
-            }
-          ]
-        },
-        {
-          "alias": "Grenier",
-          "groupBy": [],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Capteur de température\") FROM \"mobilealerts\" WHERE (\"location\" = 'Antonin') AND $timeFilter  GROUP BY time(29m) fill(linear)",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Capteur de température"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "Antonin"
-            }
-          ]
-        },
-        {
-          "alias": "Dehors",
-          "groupBy": [],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Température\") FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND $timeFilter GROUP BY time(29m) fill(linear)",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Température"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "dehors"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "All Temperature",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": 0,
-          "format": "celsius",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "decimals": 0,
-          "format": "celsius",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "Antonin": "#6ed0e0",
-        "Dehors": "#e24d42"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "decimals": 0,
-      "fill": 0,
-      "gridPos": {
-        "h": 13,
-        "w": 24,
-        "x": 0,
-        "y": 31
-      },
-      "id": 7,
-      "interval": "7m",
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": false,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 300,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "Dehors",
-          "yaxis": 1
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "Chambre",
-          "groupBy": [],
-          "hide": false,
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Hygrométrie\") FROM \"mobilealerts\" WHERE (\"location\" = 'chambre') AND $timeFilter GROUP BY time(29m) fill(linear)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Hygrométrie"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "chambre"
-            }
-          ]
-        },
-        {
-          "alias": "Cuisine",
-          "groupBy": [],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Hygrométrie\") FROM \"mobilealerts\" WHERE (\"location\" = 'cuisine') AND $timeFilter GROUP BY time(29m) fill(linear)",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Hygrométrie"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "cuisine"
-            }
-          ]
-        },
-        {
-          "alias": "Antonin",
-          "groupBy": [],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Hygrométrie\") FROM \"mobilealerts\" WHERE (\"location\" = 'Antonin') AND $timeFilter GROUP BY time(29m) fill(linear)",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Hygrométrie"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "Antonin"
-            }
-          ]
-        },
-        {
-          "alias": "Dehors",
-          "groupBy": [],
-          "measurement": "mobilealerts",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Hygrométrie\") FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND $timeFilter GROUP BY time(29m) fill(linear)",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Hygrométrie"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "location",
-              "operator": "=",
-              "value": "dehors"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "All Hygrométrie",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": 0,
-          "format": "humidity",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "decimals": 0,
-          "format": "humidity",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "valueName": "avg"
     },
     {
       "aliasColors": {
         "Hygrométrie": "#64b0c8",
-        "Température": "#ef843c"
+        "Température": "#629e51"
       },
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "decimals": 1,
-      "fill": 0,
+      "fill": 1,
       "gridPos": {
-        "h": 13,
+        "h": 8,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 8
       },
-      "id": 6,
+      "id": 19,
+      "interval": "21m",
       "legend": {
         "alignAsTable": true,
         "avg": true,
         "current": false,
         "max": true,
         "min": true,
-        "rightSide": true,
+        "rightSide": false,
         "show": true,
-        "sideWidth": 400,
+        "sideWidth": 350,
         "total": false,
         "values": true
       },
@@ -1059,16 +621,18 @@
       "renderer": "flot",
       "repeat": "Location",
       "repeatDirection": "v",
-      "scopedVars": {
-        "Location": {
-          "selected": true,
-          "text": "chambre",
-          "value": "chambre"
-        }
-      },
       "seriesOverrides": [
         {
+          "alias": "Température",
+          "color": "#8AB8FF",
+          "fill": 3,
+          "linewidth": 3
+        },
+        {
           "alias": "Hygrométrie",
+          "color": "#FFEE52",
+          "fill": 1,
+          "linewidth": 2,
           "yaxis": 2
         }
       ],
@@ -1177,21 +741,27 @@
     },
     {
       "aliasColors": {
-        "Hygrométrie": "#64b0c8",
-        "Température": "#e5ac0e"
+        "antonin": "#6ed0e0",
+        "chambre": "#508642",
+        "cuisine": "semi-dark-yellow",
+        "dehors": "#e24d42",
+        "grenier": "light-blue",
+        "piscine": "semi-dark-blue"
       },
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "${DS_INFLUXDB}",
       "decimals": 1,
-      "fill": 1,
+      "fill": 0,
       "gridPos": {
-        "h": 12,
+        "h": 11,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 16
       },
-      "id": 4,
+      "id": 18,
+      "interval": "21m",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -1200,6 +770,7 @@
         "min": true,
         "rightSide": true,
         "show": true,
+        "sideWidth": 300,
         "total": false,
         "values": true
       },
@@ -1212,10 +783,12 @@
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
       "seriesOverrides": [
         {
-          "alias": "Hygrométrie",
-          "yaxis": 2
+          "alias": "Dehors",
+          "yaxis": 1
         }
       ],
       "spaceLength": 10,
@@ -1223,12 +796,179 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Grenier",
-          "groupBy": [],
+          "alias": "$tag_location",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "location"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
           "measurement": "mobilealerts",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"Capteur de température\") FROM \"mobilealerts\" WHERE (\"location\" = 'Antonin') AND $timeFilter  GROUP BY time(29m) fill(linear)",
+          "refId": "F",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Température"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "All Temperature",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "celsius",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "decimals": 0,
+          "format": "celsius",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "Chauffage": "#cca300",
+        "Hygrométrie": "#64b0c8",
+        "Max": "#bf1b00",
+        "Min": "#9ac48a",
+        "Température": "#e5ac0e"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "decimals": 0,
+      "fill": 0,
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 11,
+      "interval": "21m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sideWidth": 300,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null as zero",
+      "paceLength": 10,
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Chauffage",
+          "color": "#1f78c1",
+          "fill": 5,
+          "linewidth": 1
+        },
+        {
+          "alias": "Min",
+          "color": "#9ac48a",
+          "fill": 2,
+          "linewidth": 1
+        },
+        {
+          "alias": "Max",
+          "fill": 2,
+          "linewidth": 0
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": true,
+      "targets": [
+        {
+          "alias": "Chauffage",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "mobilealerts",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT (mean(\"consigne\") - mean(\"Température\") )/ mean(\"ecart\") * 100 FROM \"mobilealerts\" WHERE \"location\" = 'dehors'  AND \"Température\" < \"consigne\" AND heureCreuse = 1 AND $timeFilter GROUP BY time(20m) fill(null)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1236,9 +976,13 @@
             [
               {
                 "params": [
-                  "Capteur de température"
+                  "Température"
                 ],
                 "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
               }
             ]
           ],
@@ -1246,16 +990,75 @@
             {
               "key": "location",
               "operator": "=",
-              "value": "Antonin"
+              "value": "dehors"
             }
           ]
+        },
+        {
+          "alias": "Max",
+          "groupBy": [],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT (14 - mean(\"Température\") )/ 6 * 100 FROM \"mobilealerts\" WHERE \"location\" = 'dehors'  AND \"Température\" < \"consigne\" AND heureCreuse = 1 AND $timeFilter GROUP BY time(20m) fill(null)\n",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Min",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT (10 - mean(\"Température\") )/ 14 * 100 FROM \"mobilealerts\" WHERE \"location\" = 'dehors'  AND \"Température\" < \"consigne\" AND heureCreuse = 1 AND $timeFilter GROUP BY time(20m) fill(null)\n",
+          "rawQuery": true,
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Grenier",
+      "title": "% Utilisation du Chauffage",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1272,7 +1075,149 @@
       },
       "yaxes": [
         {
-          "format": "celsius",
+          "format": "percent",
+          "label": null,
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "humidity",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "Antonin": "#6ed0e0",
+        "Dehors": "#e24d42",
+        "antonin": "#6ed0e0",
+        "chambre": "#7eb26d",
+        "dehors": "#e24d42"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_INFLUXDB}",
+      "decimals": 0,
+      "fill": 0,
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "hideTimeOverride": false,
+      "id": 7,
+      "interval": "21m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sideWidth": 300,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "paceLength": 10,
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Dehors",
+          "yaxis": 1
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_location",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "location"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "mobilealerts",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Hygrométrie"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "All Hygrométrie",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "humidity",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1280,6 +1225,7 @@
           "show": true
         },
         {
+          "decimals": 0,
           "format": "humidity",
           "label": null,
           "logBase": 1,
@@ -1294,55 +1240,24 @@
       }
     }
   ],
-  "refresh": false,
-  "schemaVersion": 16,
+  "schemaVersion": 18,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": [
       {
         "allValue": null,
-        "current": {
-          "selected": false,
-          "text": "chambre",
-          "value": "chambre"
-        },
-        "datasource": "InfluxDB",
+        "current": {},
+        "datasource": "${DS_INFLUXDB}",
         "definition": "SHOW TAG VALUES WITH KEY = \"location\"",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "Location",
-        "options": [
-          {
-            "selected": false,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "Antonin",
-            "value": "Antonin"
-          },
-          {
-            "selected": true,
-            "text": "chambre",
-            "value": "chambre"
-          },
-          {
-            "selected": false,
-            "text": "cuisine",
-            "value": "cuisine"
-          },
-          {
-            "selected": false,
-            "text": "dehors",
-            "value": "dehors"
-          }
-        ],
+        "options": [],
         "query": "SHOW TAG VALUES WITH KEY = \"location\"",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 5,
@@ -1353,51 +1268,9 @@
         "useTags": false
       },
       {
-        "current": {
-          "text": "10",
-          "value": "10"
-        },
-        "hide": 0,
-        "label": null,
-        "name": "Consigne",
-        "options": [
-          {
-            "selected": false,
-            "text": "50",
-            "value": "50"
-          }
-        ],
-        "query": "10",
-        "skipUrlSync": false,
-        "type": "textbox"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "14",
-          "value": "14"
-        },
-        "hide": 0,
-        "label": null,
-        "name": "Ecart",
-        "options": [
-          {
-            "selected": true,
-            "text": "14",
-            "value": "14"
-          }
-        ],
-        "query": "14",
-        "skipUrlSync": false,
-        "type": "textbox"
-      },
-      {
         "allValue": null,
-        "current": {
-          "text": "434",
-          "value": "434"
-        },
-        "datasource": "InfluxDB",
+        "current": {},
+        "datasource": "${DS_INFLUXDB}",
         "definition": "SELECT COUNT(\"heureCreuse\") FROM \"mobilealerts\" WHERE (\"location\" = 'dehors') AND heureCreuse = 1 AND $timeFilter",
         "hide": 2,
         "includeAll": false,
@@ -1419,8 +1292,8 @@
     ]
   },
   "time": {
-    "from": "now-7d",
-    "to": "now"
+    "from": "now-20d/d",
+    "to": "now-1d/d"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1439,7 +1312,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Temperature",
-  "uid": "kGjTirCik",
-  "version": 78
+  "title": "Temperature v2",
+  "uid": "ZGjTirCik",
+  "version": 15
 }
